@@ -66,7 +66,28 @@ def create(name, column_name):
         if column['name'] == column_name:      
             # Создадим задачу с именем _name_ в найденной колонке      
             requests.post(base_url.format('cards'), data={'name': name, 'idList': column['id'], **auth_params},verify=False)
+            print("Задача ", name, "создана в колонке", column_name)
             break
+    else:
+    	newlist(column_name)
+    	column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params,verify=False).json()
+
+    	for column in column_data:    
+	        if column['name'] == column_name:
+	        	requests.post(base_url.format('cards'), data={'name': name, 'idList': column['id'], **auth_params},verify=False)
+	        	print("Задача ", name, "создана в колонке", column_name)
+	        	break
+    	else:
+    		print("Нет такого списка")
+
+
+
+
+
+def newlist(list_name):
+	requests.post(base_url.format('lists'), data={'name': list_name, 'idBoard': board_id, **auth_params},verify=False)
+	print("Создана колонка ",list_name)
+
 
 def move(name, column_name):    
     # Получим данные всех колонок на доске    
@@ -83,7 +104,10 @@ def move(name, column_name):
         	taskss.append((column['name'],column['id'],task['name'],task['id']))
     # print(taskss)
     repeated_tasks=list((filter(lambda x : x[2] == name, taskss)))
-    if len(repeated_tasks)>1:
+    if len(repeated_tasks)==0:
+    	print("Нет такой задачи")
+    	return
+    elif len(repeated_tasks)>1:
     	i=1
     	for task in repeated_tasks:
      		print(i, name, " Из колонки ", task[0])
@@ -103,12 +127,22 @@ def move(name, column_name):
     for column in column_data:    
         if column['name'] == column_name:    
             # И выполним запрос к API для перемещения задачи в нужную колонку    
-            requests.put(base_url.format('cards') + '/' + task_id + '/idList', data={'value': column['id'], **auth_params},verify=False)    
-            break    
+            requests.put(base_url.format('cards') + '/' + task_id + '/idList', data={'value': column['id'], **auth_params},verify=False)
+            print("Задача ", name, "перемещена в колонку", column_name)
+            break
+    else:
+    	newlist(column_name)
+    	column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params,verify=False).json()
+
+    	for column in column_data:    
+	        if column['name'] == column_name:
+	        	requests.put(base_url.format('cards') + '/' + task_id + '/idList', data={'value': column['id'], **auth_params},verify=False)
+	        	print("Задача ", name, "перемещена в колонку", column_name)
+	        	break
+    	else:
+    		print("Нет такого списка")
 
 
-def newlist(list_name):
-	requests.post(base_url.format('lists'), data={'name': list_name, 'idBoard': board_id, **auth_params},verify=False)
 
 def start():
 	mode = input("Выбери режим.\n1 - Вывести текущие списки и задания \n2 - Создать новую задачу\n3 - Переместить задачу\n4 - Создать новый список\n")
